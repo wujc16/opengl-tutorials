@@ -1,11 +1,9 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include<iostream>
-#include<cmath>
 
 using std::cout;
 using std::endl;
-using std::sin;
 
 // 声明视窗变化的回调函数
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -20,16 +18,15 @@ const char *vertexShaderSource =
   "layout (location=0) in vec3 aPos;\n"
   "void main()\n"
   "{\n"
-  " gl_Position = vec4(aPos, 1.0);\n"
+  " gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
   "}\0";
 
 const char *fragmentShaderSource =
   "#version 410 core\n"
   "out vec4 FragColor;\n"
-  "uniform vec4 ourColor;\n"
   "void main()\n"
   "{\n"
-  " FragColor = ourColor;\n"
+  " FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
   "}\0";
 
 int main() {
@@ -108,17 +105,17 @@ int main() {
   // VBO: Vertex Buffer Object
   GLuint VBO, VAO;
   glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-
   glBindVertexArray(VAO);
 
+  glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // GL_STATIC_DRAW 表示数据几乎不会变，每次绘制的时候都是原样
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 
   while (!glfwWindowShouldClose(window))
   {
@@ -127,13 +124,7 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-
-    // 绿色分量按照时间 sin 值在 [0, 1] 之间变化
-    float timeVal = glfwGetTime();
-    float greenVal = sin(timeVal) / 2.0f + 0.5f;
-    int vertexColorLoc = glGetUniformLocation(shaderProgram, "ourColor");
-    glUniform4f(vertexColorLoc, 0.0f, greenVal, 0.0f, 1.0f);
-
+    glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     glfwSwapBuffers(window);
