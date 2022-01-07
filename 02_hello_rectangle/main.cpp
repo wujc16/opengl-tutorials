@@ -94,23 +94,37 @@ int main() {
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
-  // 三角形三个顶点的坐标
+  // 这里是四个点，但是会绘制两个三角形
   float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  // bottom left
+    -0.5f,  0.5f, 0.0f   // top left 
+  };
+  // 具体的绘制方式就需要通过下面的 index 来指定了
+  unsigned int indices[] = {
+    0, 1, 3, // 第 1， 2， 3 行的三个点用来绘制第一个三角形
+    1, 2, 3  // 第 2， 3， 4 行的三个点用来绘制第二个三角形
   };
 
   // VAO: Vertex Array Object
   // VBO: Vertex Buffer Object
-  GLuint VBO, VAO;
+  GLuint VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glGenBuffers(1, &EBO);
+
   glBindVertexArray(VAO);
 
-  glGenBuffers(1, &VBO);
+  // bind VBO
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  // GL_STATIC_DRAW 表示数据几乎不会变，每次绘制的时候都是原样
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // GL_STATIC_DRAW 表示数据几乎不变
+
+  // bind EBO
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+  // enable VAO
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
@@ -125,7 +139,10 @@ int main() {
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // 注意，这里变了
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -133,6 +150,7 @@ int main() {
 
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
+  glDeleteBuffers(1, &EBO);
   glDeleteProgram(shaderProgram);
   glfwTerminate();
   return 0;
